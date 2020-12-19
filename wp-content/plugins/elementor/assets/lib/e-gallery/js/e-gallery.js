@@ -1,4 +1,3 @@
-/*! E-Gallery v1.2.0 by Elementor */
 var EGallery =
 /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
@@ -379,7 +378,7 @@ function () {
   }, {
     key: "createGallery",
     value: function createGallery() {
-      var settings = jQuery.extend(this.getDefaultSettings(), this.userSettings);
+      var settings = jQuery.extend(true, this.getDefaultSettings(), this.userSettings);
       var GalleryHandlerType = this.galleriesTypes[settings.type];
       this.galleryHandler = new GalleryHandlerType(settings);
     }
@@ -436,16 +435,10 @@ function () {
     this.prepareGallery();
     var oldRunGallery = this.runGallery.bind(this);
     this.runGallery = this.debounce(function () {
-      for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
-        args[_key] = arguments[_key];
-      }
-
       if (_this.settings.lazyLoad) {
-        oldRunGallery.apply(void 0, args);
+        oldRunGallery();
       } else {
-        _this.allImagesPromise.then(function () {
-          return oldRunGallery.apply(void 0, args);
-        });
+        _this.allImagesPromise.then(oldRunGallery);
       }
     }, 300);
 
@@ -550,13 +543,6 @@ function () {
           activeIndexes = [];
 
       if (!activeTags.length) {
-        if (returnIndexes) {
-          this.$items.each(function (index) {
-            activeIndexes.push(index);
-          });
-          return activeIndexes;
-        }
-
         return this.$items;
       }
 
@@ -665,8 +651,8 @@ function () {
 
       var timeout;
       return function () {
-        for (var _len2 = arguments.length, args = new Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
-          args[_key2] = arguments[_key2];
+        for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
+          args[_key] = arguments[_key];
         }
 
         clearTimeout(timeout);
@@ -716,35 +702,33 @@ function () {
     value: function lazyLoadImages() {
       var _this6 = this;
 
-      if (this.lazyLoadComplete) {
+      if (this.settings.lazyLoadComplete) {
         return;
       }
 
-      var $items = this.getActiveItems(),
-          itemsIndexes = this.getActiveItems(true);
-      $items.each(function (index, item) {
-        var itemData = _this6.settings.items[itemsIndexes[index]];
+      var loadedItems = 0;
+      this.$items.each(function (index, item) {
+        var $item = jQuery(item);
 
-        if (itemData.loading || !Object(_utils__WEBPACK_IMPORTED_MODULE_2__["elementInView"])(item)) {
-          return true;
+        if (!item.loaded && !$item.hasClass(_this6.settings.classes.hidden) && Object(_utils__WEBPACK_IMPORTED_MODULE_2__["elementInView"])(item)) {
+          var image = new Image(),
+              promise = new Promise(function (resolve) {
+            image.onload = resolve;
+          });
+          promise.then(function () {
+            $item.find(_this6.settings.selectors.image).css('background-image', 'url(' + _this6.settings.items[index].thumbnail + ')').addClass(_this6.getItemClass(_this6.settings.classes.imageLoaded));
+            item.loaded = true;
+          });
+          image.src = _this6.settings.items[index].thumbnail;
         }
 
-        itemData.loading = true;
-        var $item = jQuery(item),
-            image = new Image(),
-            promise = new Promise(function (resolve) {
-          image.onload = resolve;
-        });
-        promise.then(function () {
-          $item.find(_this6.settings.selectors.image).css('background-image', 'url("' + itemData.thumbnail + '")').addClass(_this6.getItemClass(_this6.settings.classes.imageLoaded));
-          _this6.loadedItemsCount++;
+        if (item.loaded) {
+          loadedItems++;
 
-          if (_this6.loadedItemsCount === _this6.settings.items.length) {
-            _this6.lazyLoadComplete = true;
+          if (loadedItems === _this6.settings.items.length) {
+            _this6.settings.lazyLoadComplete = true;
           }
-        });
-        image.src = itemData.thumbnail;
-        return true;
+        }
       });
     }
   }, {
@@ -799,8 +783,6 @@ function () {
       this.imagesData = [];
 
       if (this.settings.lazyLoad) {
-        this.loadedItemsCount = 0;
-        this.lazyLoadComplete = false;
         this.createImagesData();
       } else {
         this.loadImages();
@@ -1185,50 +1167,42 @@ function (_BaseGalleryType) {
 
       this.currentBreakpoint = currentBreakpoint;
       var heights = [],
-          itemsInColumn = [],
           aggregatedHeights = [],
           columns = this.getCurrentDeviceSetting('columns'),
           containerWidth = this.$container.width(),
           horizontalGap = this.getCurrentDeviceSetting('horizontalGap'),
           itemWidth = (containerWidth - horizontalGap * (columns - 1)) / columns,
           $items = this.getActiveItems();
-      var naturalColumnHeight = 0;
-
-      for (var i = 0; i < columns; i++) {
-        itemsInColumn[i] = 0;
-        heights[i] = 0;
-      }
-
       $items.each(function (index, item) {
-        var imageData = _this.getImageData(index),
+        var row = Math.floor(index / columns),
+            indexAtRow = index % columns,
+            imageData = _this.getImageData(index),
             itemHeight = itemWidth / imageData.ratio;
 
-        var indexAtRow = index % columns;
-        naturalColumnHeight = heights[indexAtRow];
-        jQuery.each(heights, function (colNumber, currentColHeight) {
-          if (currentColHeight && naturalColumnHeight > currentColHeight + 5) {
-            naturalColumnHeight = currentColHeight;
-            indexAtRow = colNumber;
-          }
-        });
-        aggregatedHeights[index] = heights[indexAtRow];
-        heights[indexAtRow] += itemHeight;
         item.style.setProperty('--item-height', imageData.height / imageData.width * 100 + '%');
         item.style.setProperty('--column', indexAtRow);
-        item.style.setProperty('--items-in-column', itemsInColumn[indexAtRow]);
-        itemsInColumn[indexAtRow]++;
+
+        if (row) {
+          aggregatedHeights[index] = heights[indexAtRow];
+          heights[indexAtRow] += itemHeight;
+        } else {
+          heights.push(itemHeight);
+        }
       });
       var highestColumn = Math.max.apply(Math, heights),
           highestColumnIndex = heights.indexOf(highestColumn),
-          rows = itemsInColumn[highestColumnIndex],
-          highestColumnsGapsCount = rows - 1,
+          rows = Math.floor(this.settings.items.length / columns),
+          rowsRemainder = this.settings.items.length % columns,
+          highestColumnsGapsCount = rowsRemainder > highestColumnIndex ? rows : rows - 1,
           containerAspectRatio = highestColumn / containerWidth;
       this.$container[0].style.setProperty('--columns', columns);
       this.$container[0].style.setProperty('--highest-column-gap-count', highestColumnsGapsCount);
       this.$container.css('padding-bottom', containerAspectRatio * 100 + '%');
       $items.each(function (index, item) {
-        var percentHeight = aggregatedHeights[index] ? aggregatedHeights[index] / highestColumn * 100 : 0;
+        var percentHeight = aggregatedHeights[index] ? aggregatedHeights[index] / highestColumn * 100 : 0,
+            row = Math.floor(index / columns);
         item.style.setProperty('--percent-height', percentHeight + '%');
+        item.style.setProperty('--row', row);
       });
     }
   }]);

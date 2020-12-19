@@ -210,7 +210,9 @@ abstract class Base {
 	 *                    the property does not exist.
 	 */
 	public function get_meta( $property = null ) {
-		$meta = array_merge( $this->get_default_meta(), (array) $this->load_meta() );
+		$default_meta = $this->get_default_meta();
+
+		$meta = array_merge( $default_meta, (array) $this->load_meta() );
 
 		if ( $property ) {
 			return isset( $meta[ $property ] ) ? $meta[ $property ] : null;

@@ -5,8 +5,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit; // Exit if accessed directly.
 }
 
-use Elementor\Core\Kits\Documents\Tabs\Global_Colors;
-use Elementor\Core\Kits\Documents\Tabs\Global_Typography;
+use Elementor\Core\Schemes;
 
 /**
  * Elementor tabs widget.
@@ -252,10 +251,11 @@ class Widget_Tabs extends Widget_Base {
 				'label' => __( 'Color', 'elementor' ),
 				'type' => Controls_Manager::COLOR,
 				'selectors' => [
-					'{{WRAPPER}} .elementor-tab-title, {{WRAPPER}} .elementor-tab-title a' => 'color: {{VALUE}};',
+					'{{WRAPPER}} .elementor-tab-title a' => 'color: {{VALUE}};',
 				],
-				'global' => [
-					'default' => Global_Colors::COLOR_PRIMARY,
+				'scheme' => [
+					'type' => Schemes\Color::get_type(),
+					'value' => Schemes\Color::COLOR_1,
 				],
 			]
 		);
@@ -268,8 +268,9 @@ class Widget_Tabs extends Widget_Base {
 				'selectors' => [
 					'{{WRAPPER}} .elementor-tab-title.elementor-active a' => 'color: {{VALUE}};',
 				],
-				'global' => [
-					'default' => Global_Colors::COLOR_ACCENT,
+				'scheme' => [
+					'type' => Schemes\Color::get_type(),
+					'value' => Schemes\Color::COLOR_4,
 				],
 			]
 		);
@@ -279,9 +280,7 @@ class Widget_Tabs extends Widget_Base {
 			[
 				'name' => 'tab_typography',
 				'selector' => '{{WRAPPER}} .elementor-tab-title',
-				'global' => [
-					'default' => Global_Typography::TYPOGRAPHY_PRIMARY,
-				],
+				'scheme' => Schemes\Typography::TYPOGRAPHY_1,
 			]
 		);
 
@@ -302,8 +301,9 @@ class Widget_Tabs extends Widget_Base {
 				'selectors' => [
 					'{{WRAPPER}} .elementor-tab-content' => 'color: {{VALUE}};',
 				],
-				'global' => [
-					'default' => Global_Colors::COLOR_TEXT,
+				'scheme' => [
+					'type' => Schemes\Color::get_type(),
+					'value' => Schemes\Color::COLOR_3,
 				],
 			]
 		);
@@ -313,9 +313,7 @@ class Widget_Tabs extends Widget_Base {
 			[
 				'name' => 'content_typography',
 				'selector' => '{{WRAPPER}} .elementor-tab-content',
-				'global' => [
-					'default' => Global_Typography::TYPOGRAPHY_TEXT,
-				],
+				'scheme' => Schemes\Typography::TYPOGRAPHY_3,
 			]
 		);
 

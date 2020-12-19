@@ -5,8 +5,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit; // Exit if accessed directly.
 }
 
-use Elementor\Core\Kits\Documents\Tabs\Global_Colors;
-use Elementor\Core\Kits\Documents\Tabs\Global_Typography;
+use Elementor\Core\Schemes;
 
 /**
  * Elementor image widget.
@@ -319,58 +318,6 @@ class Widget_Image extends Widget_Base {
 			]
 		);
 
-		$this->add_responsive_control(
-			'height',
-			[
-				'label' => __( 'Height', 'elementor' ),
-				'type' => Controls_Manager::SLIDER,
-				'default' => [
-					'unit' => 'px',
-				],
-				'tablet_default' => [
-					'unit' => 'px',
-				],
-				'mobile_default' => [
-					'unit' => 'px',
-				],
-				'size_units' => [ 'px', 'vh' ],
-				'range' => [
-					'px' => [
-						'min' => 1,
-						'max' => 500,
-					],
-					'vh' => [
-						'min' => 1,
-						'max' => 100,
-					],
-				],
-				'selectors' => [
-					'{{WRAPPER}} .elementor-image img' => 'height: {{SIZE}}{{UNIT}};',
-				],
-			]
-		);
-
-		$this->add_responsive_control(
-			'object-fit',
-			[
-				'label' => __( 'Object Fit', 'elementor' ),
-				'type' => Controls_Manager::SELECT,
-				'condition' => [
-					'height[size]!' => '',
-				],
-				'options' => [
-					'' => __( 'Default', 'elementor' ),
-					'fill' => __( 'Fill', 'elementor' ),
-					'cover' => __( 'Cover', 'elementor' ),
-					'contain' => __( 'Contain', 'elementor' ),
-				],
-				'default' => '',
-				'selectors' => [
-					'{{WRAPPER}} .elementor-image img' => 'object-fit: {{VALUE}};',
-				],
-			]
-		);
-
 		$this->add_control(
 			'separator_panel_style',
 			[
@@ -560,8 +507,9 @@ class Widget_Image extends Widget_Base {
 				'selectors' => [
 					'{{WRAPPER}} .widget-image-caption' => 'color: {{VALUE}};',
 				],
-				'global' => [
-					'default' => Global_Colors::COLOR_TEXT,
+				'scheme' => [
+					'type' => Schemes\Color::get_type(),
+					'value' => Schemes\Color::COLOR_3,
 				],
 			]
 		);
@@ -582,9 +530,7 @@ class Widget_Image extends Widget_Base {
 			[
 				'name' => 'caption_typography',
 				'selector' => '{{WRAPPER}} .widget-image-caption',
-				'global' => [
-					'default' => Global_Typography::TYPOGRAPHY_TEXT,
-				],
+				'scheme' => Schemes\Typography::TYPOGRAPHY_3,
 			]
 		);
 

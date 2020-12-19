@@ -35,7 +35,7 @@ class Model extends BaseModel {
 	 */
 	public function get_panel_page_settings() {
 		return [
-			'title' => __( 'User Preferences', 'elementor' ),
+			'title' => __( 'Editor Preferences', 'elementor' ),
 		];
 	}
 
@@ -60,23 +60,6 @@ class Model extends BaseModel {
 					'auto' => __( 'Auto Detect', 'elementor' ),
 					'light' => __( 'Light', 'elementor' ),
 					'dark' => __( 'Dark', 'elementor' ),
-				],
-			]
-		);
-
-		$this->add_control(
-			'panel_width',
-			[
-				'label' => __( 'Panel Width', 'elementor' ),
-				'type' => Controls_Manager::SLIDER,
-				'range' => [
-					'px' => [
-						'min' => 200,
-						'max' => 680,
-					],
-				],
-				'default' => [
-					'size' => 300,
 				],
 			]
 		);

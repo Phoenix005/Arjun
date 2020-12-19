@@ -1,8 +1,8 @@
 <?php
 namespace Elementor\Core\Files\CSS;
 
-use Elementor\Core\Kits\Manager;
 use Elementor\Plugin;
+use Elementor\Scheme_Base;
 use Elementor\Settings;
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -63,7 +63,7 @@ class Global_CSS extends Base {
 	 * @access protected
 	 */
 	protected function render_css() {
-		$this->render_schemes_and_globals_css();
+		$this->render_schemes_css();
 	}
 
 	/**
@@ -92,7 +92,21 @@ class Global_CSS extends Base {
 	 * @return bool True if the CSS requires an update, False otherwise.
 	 */
 	protected function is_update_required() {
-		return $this->get_meta( 'time' ) < get_option( Settings::UPDATE_TIME_FIELD );
+		$file_last_updated = $this->get_meta( 'time' );
+
+		$schemes_last_update = get_option( Scheme_Base::LAST_UPDATED_META );
+
+		if ( $file_last_updated < $schemes_last_update ) {
+			return true;
+		}
+
+		$elementor_settings_last_updated = get_option( Settings::UPDATE_TIME_FIELD );
+
+		if ( $file_last_updated < $elementor_settings_last_updated ) {
+			return true;
+		}
+
+		return false;
 	}
 
 	/**
@@ -103,56 +117,32 @@ class Global_CSS extends Base {
 	 * @since 1.2.0
 	 * @access private
 	 */
-	private function render_schemes_and_globals_css() {
+	private function render_schemes_css() {
 		$elementor = Plugin::$instance;
 
-		/** @var Manager $module */
-		$kits_manager = Plugin::$instance->kits_manager;
-		$custom_colors_enabled = $kits_manager->is_custom_colors_enabled();
-		$custom_typography_enabled = $kits_manager->is_custom_typography_enabled();
-
-		// If both default colors and typography are disabled, there is no need to render schemes and default global css.
-		if ( ! $custom_colors_enabled && ! $custom_typography_enabled ) {
-			return;
-		}
-
 		foreach ( $elementor->widgets_manager->get_widget_types() as $widget ) {
-			$controls = $widget->get_controls();
+			$scheme_controls = $widget->get_scheme_controls();
 
-			$global_controls = [];
+			foreach ( $scheme_controls as $control ) {
+				$this->add_control_rules(
+					$control, $widget->get_controls(), function( $control ) use ( $elementor ) {
+						$scheme_value = $elementor->schemes_manager->get_scheme_value( $control['scheme']['type'], $control['scheme']['value'] );
 
-			$global_values['__globals__'] = [];
+						if ( empty( $scheme_value ) ) {
+							return null;
+						}
 
-			foreach ( $controls as $control ) {
-				$is_color_control = 'color' === $control['type'];
-				$is_typography_control = isset( $control['groupType'] ) && 'typography' === $control['groupType'];
+						if ( ! empty( $control['scheme']['key'] ) ) {
+							$scheme_value = $scheme_value[ $control['scheme']['key'] ];
+						}
 
-				// If it is a color/typography control and default colors/typography are disabled,
-				// don't add the default CSS.
-				if ( ( $is_color_control && ! $custom_colors_enabled ) || ( $is_typography_control && ! $custom_typography_enabled ) ) {
-					continue;
-				}
+						if ( empty( $scheme_value ) ) {
+							return null;
+						}
 
-				$global_control = $control;
-
-				// Handle group controls that don't have a default global property.
-				if ( ! empty( $control['groupType'] ) ) {
-					$global_control = $controls[ $control['groupPrefix'] . $control['groupType'] ];
-				}
-
-				// If the control has a default global defined, add it to the globals array
-				// that is used in add_control_rules.
-				if ( ! empty( $control['global']['default'] ) ) {
-					$global_values['__globals__'][ $control['name'] ] = $global_control['global']['default'];
-				}
-
-				if ( ! empty( $global_control['global']['default'] ) ) {
-					$global_controls[] = $control;
-				}
-			}
-
-			foreach ( $global_controls as $control ) {
-				$this->add_control_rules( $control, $controls, function( $control ) {}, [ '{{WRAPPER}}' ], [ '.elementor-widget-' . $widget->get_name() ], $global_values );
+						return $scheme_value;
+					}, [ '{{WRAPPER}}' ], [ '.elementor-widget-' . $widget->get_name() ]
+				);
 			}
 		}
 	}

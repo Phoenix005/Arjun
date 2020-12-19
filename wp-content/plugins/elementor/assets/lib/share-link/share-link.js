@@ -73,19 +73,20 @@
 	};
 
 	ShareLink.networkTemplates = {
-		twitter: 'https://twitter.com/intent/tweet?text={text}\x20{url}',
+		twitter: 'https://twitter.com/intent/tweet?text={text}{url}',
 		pinterest: 'https://www.pinterest.com/pin/create/button/?url={url}&media={image}',
 		facebook: 'https://www.facebook.com/sharer.php?u={url}',
 		vk: 'https://vkontakte.ru/share.php?url={url}&title={title}&description={text}&image={image}',
 		linkedin: 'https://www.linkedin.com/shareArticle?mini=true&url={url}&title={title}&summary={text}&source={url}',
 		odnoklassniki: 'https://connect.ok.ru/offer?url={url}&title={title}&imageUrl={image}',
 		tumblr: 'https://tumblr.com/share/link?url={url}',
+		delicious: 'https://del.icio.us/save?url={url}&title={title}',
 		google: 'https://plus.google.com/share?url={url}',
 		digg: 'https://digg.com/submit?url={url}',
 		reddit: 'https://reddit.com/submit?url={url}&title={title}',
 		stumbleupon: 'https://www.stumbleupon.com/submit?url={url}',
 		pocket: 'https://getpocket.com/edit?url={url}',
-		whatsapp: 'https://api.whatsapp.com/send?text=*{title}*%0A{text}%0A{url}',
+		whatsapp: 'https://api.whatsapp.com/send?text=*{title}*\n{text}\n{url}',
 		xing: 'https://www.xing.com/app/user?op=share&url={url}',
 		print: 'javascript:print()',
 		email: 'mailto:?subject={title}&body={text}\n{url}',

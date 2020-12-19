@@ -171,16 +171,7 @@ class Tools extends Settings_Page {
 					break;
 				}
 
-				$lowercase_version = strtolower( $version );
-				$is_valid_rollback_version = ! preg_match( '/(trunk|beta|rc|dev)/i', $lowercase_version );
-
-				$is_valid_rollback_version = apply_filters(
-					'elementor/settings/tools/rollback/is_valid_rollback_version',
-					$is_valid_rollback_version,
-					$lowercase_version
-				);
-
-				if ( ! $is_valid_rollback_version ) {
+				if ( preg_match( '/(trunk|beta|rc)/i', strtolower( $version ) ) ) {
 					continue;
 				}
 
@@ -250,7 +241,7 @@ class Tools extends Settings_Page {
 							$intro_text = sprintf(
 								/* translators: %s: Codex URL */
 								__( '<strong>Important:</strong> It is strongly recommended that you <a target="_blank" href="%s">backup your database</a> before using Replace URL.', 'elementor' ),
-								'http://go.elementor.com/wordpress-backups/'
+								'https://codex.wordpress.org/WordPress_Backups'
 							);
 							$intro_text = '<div>' . $intro_text . '</div>';
 

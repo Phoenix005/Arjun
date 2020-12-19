@@ -75,7 +75,7 @@ class Widget_Common extends Widget_Base {
 			[
 				'label' => __( 'Margin', 'elementor' ),
 				'type' => Controls_Manager::DIMENSIONS,
-				'size_units' => [ 'px', 'em', '%', 'rem' ],
+				'size_units' => [ 'px', '%' ],
 				'selectors' => [
 					'{{WRAPPER}} > .elementor-widget-container' => 'margin: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
 				],
@@ -87,14 +87,14 @@ class Widget_Common extends Widget_Base {
 			[
 				'label' => __( 'Padding', 'elementor' ),
 				'type' => Controls_Manager::DIMENSIONS,
-				'size_units' => [ 'px', 'em', '%', 'rem' ],
+				'size_units' => [ 'px', 'em', '%' ],
 				'selectors' => [
 					'{{WRAPPER}} > .elementor-widget-container' => 'padding: {{TOP}}{{UNIT}} {{RIGHT}}{{UNIT}} {{BOTTOM}}{{UNIT}} {{LEFT}}{{UNIT}};',
 				],
 			]
 		);
 
-		$this->add_responsive_control(
+		$this->add_control(
 			'_z_index',
 			[
 				'label' => __( 'Z-Index', 'elementor' ),
@@ -755,7 +755,9 @@ class Widget_Common extends Widget_Base {
 
 		$this->end_controls_section();
 
-		Plugin::$instance->controls_manager->add_custom_attributes_controls( $this );
+		if ( ! Utils::has_pro() ) {
+			Plugin::$instance->controls_manager->add_custom_attributes_controls( $this );
+		}
 
 		Plugin::$instance->controls_manager->add_custom_css_controls( $this );
 	}

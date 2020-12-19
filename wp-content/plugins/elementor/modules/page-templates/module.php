@@ -4,7 +4,6 @@ namespace Elementor\Modules\PageTemplates;
 use Elementor\Controls_Manager;
 use Elementor\Core\Base\Document;
 use Elementor\Core\Base\Module as BaseModule;
-use Elementor\Core\Kits\Documents\Kit;
 use Elementor\DB;
 use Elementor\Plugin;
 use Elementor\Utils;
@@ -79,14 +78,8 @@ class Module extends BaseModule {
 		if ( is_singular() ) {
 			$document = Plugin::$instance->documents->get_doc_for_frontend( get_the_ID() );
 
-			if ( $document && $document::get_property( 'support_wp_page_templates' ) ) {
+			if ( $document ) {
 				$template_path = $this->get_template_path( $document->get_meta( '_wp_page_template' ) );
-
-				if ( ! $template_path && $document->is_built_with_elementor() ) {
-					$kit_default_template = Plugin::$instance->kits_manager->get_current_settings( 'default_page_template' );
-					$template_path = $this->get_template_path( $kit_default_template );
-				}
-
 				if ( $template_path ) {
 					$template = $template_path;
 
@@ -262,6 +255,12 @@ class Module extends BaseModule {
 
 		require_once ABSPATH . '/wp-admin/includes/template.php';
 
+		$options = [
+			'default' => __( 'Default', 'elementor' ),
+		];
+
+		$options += array_flip( get_page_templates( null, $document->get_main_post()->post_type ) );
+
 		$document->start_injection( [
 			'of' => 'post_status',
 			'fallback' => [
@@ -269,39 +268,22 @@ class Module extends BaseModule {
 			],
 		] );
 
-		$control_options = [
-			'options' => array_flip( get_page_templates( null, $document->get_main_post()->post_type ) ),
-		];
-
-		$this->add_template_controls( $document, $control_id, $control_options );
-
-		$document->end_injection();
-	}
-
-	// The $options variable is an array of $control_options to overwrite the default
-	public function add_template_controls( Document $document, $control_id, $control_options ) {
-		// Default Control Options
-		$default_control_options = [
-			'label' => __( 'Page Layout', 'elementor' ),
-			'type' => Controls_Manager::SELECT,
-			'default' => 'default',
-			'options' => [
-				'default' => __( 'Default', 'elementor' ),
-			],
-		];
-
-		$control_options = array_replace_recursive( $default_control_options, $control_options );
-
 		$document->add_control(
 			$control_id,
-			$control_options
+			[
+				'label' => __( 'Page Layout', 'elementor' ),
+				'type' => Controls_Manager::SELECT,
+				'default' => 'default',
+				'options' => $options,
+			]
 		);
 
 		$document->add_control(
 			$control_id . '_default_description',
 			[
 				'type' => Controls_Manager::RAW_HTML,
-				'raw' => '<b>' . __( 'Default Page Template from your theme', 'elementor' ) . '</b>',
+				'raw' => __( 'Default Page Template from your theme', 'elementor' ),
+				'separator' => 'none',
 				'content_classes' => 'elementor-descriptor',
 				'condition' => [
 					$control_id => 'default',
@@ -313,7 +295,8 @@ class Module extends BaseModule {
 			$control_id . '_canvas_description',
 			[
 				'type' => Controls_Manager::RAW_HTML,
-				'raw' => '<b>' . __( 'No header, no footer, just Elementor', 'elementor' ) . '</b>',
+				'raw' => __( 'No header, no footer, just Elementor', 'elementor' ),
+				'separator' => 'none',
 				'content_classes' => 'elementor-descriptor',
 				'condition' => [
 					$control_id => self::TEMPLATE_CANVAS,
@@ -325,7 +308,8 @@ class Module extends BaseModule {
 			$control_id . '_header_footer_description',
 			[
 				'type' => Controls_Manager::RAW_HTML,
-				'raw' => '<b>' . __( 'This template includes the header, full-width content and footer', 'elementor' ) . '</b>',
+				'raw' => __( 'This template includes the header, full-width content and footer', 'elementor' ),
+				'separator' => 'none',
 				'content_classes' => 'elementor-descriptor',
 				'condition' => [
 					$control_id => self::TEMPLATE_HEADER_FOOTER,
@@ -333,16 +317,7 @@ class Module extends BaseModule {
 			]
 		);
 
-		if ( $document instanceof Kit ) {
-			$document->add_control(
-				'reload_preview_description',
-				[
-					'type' => Controls_Manager::RAW_HTML,
-					'raw' => __( 'Changes will be reflected in the preview only after the page reloads.', 'elementor' ),
-					'content_classes' => 'elementor-descriptor',
-				]
-			);
-		}
+		$document->end_injection();
 	}
 
 	/**

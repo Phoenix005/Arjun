@@ -2,7 +2,6 @@
 namespace Elementor\Core\Responsive;
 
 use Elementor\Core\Responsive\Files\Frontend;
-use Elementor\Plugin;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit; // Exit if accessed directly.
@@ -21,7 +20,7 @@ class Responsive {
 	/**
 	 * The Elementor breakpoint prefix.
 	 */
-	const BREAKPOINT_OPTION_PREFIX = 'viewport_';
+	const BREAKPOINT_OPTION_PREFIX = 'elementor_viewport_';
 
 	/**
 	 * Default breakpoints.
@@ -106,7 +105,7 @@ class Responsive {
 				if ( ! in_array( $breakpoint_key, self::$editable_breakpoints_keys ) ) {
 					$new_array[ $breakpoint_key ] = self::$default_breakpoints[ $breakpoint_key ];
 				} else {
-					$saved_option = Plugin::$instance->kits_manager->get_current_settings( self::BREAKPOINT_OPTION_PREFIX . $breakpoint_key );
+					$saved_option = get_option( self::BREAKPOINT_OPTION_PREFIX . $breakpoint_key );
 
 					$new_array[ $breakpoint_key ] = $saved_option ? (int) $saved_option : self::$default_breakpoints[ $breakpoint_key ];
 				}

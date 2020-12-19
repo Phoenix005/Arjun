@@ -11,7 +11,6 @@ use Elementor\User;
 use Elementor\Core\Settings\Manager as SettingsManager;
 use Elementor\Utils;
 use Elementor\Widget_Base;
-use Elementor\Core\Settings\Page\Manager as PageManager;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit; // Exit if accessed directly
@@ -35,11 +34,6 @@ abstract class Document extends Controls_Stack {
 	const PAGE_META_KEY = '_elementor_page_settings';
 
 	private $main_id;
-
-	/**
-	 * @var bool
-	 */
-	private $is_saving = false;
 
 	private static $properties = [];
 
@@ -81,7 +75,6 @@ abstract class Document extends Controls_Stack {
 			'is_editable' => true,
 			'edit_capability' => '',
 			'show_in_finder' => true,
-			'show_on_admin_bar' => true,
 			'support_kit' => false,
 		];
 	}
@@ -92,17 +85,11 @@ abstract class Document extends Controls_Stack {
 	 * @static
 	 */
 	public static function get_editor_panel_config() {
-		$default_route = 'panel/elements/categories';
-
-		if ( ! Plugin::instance()->role_manager->user_can( 'design' ) ) {
-			$default_route = 'panel/page-settings/settings';
-		}
-
 		return [
 			'title' => static::get_title(), // JS Container title.
 			'widgets_settings' => [],
 			'elements_categories' => static::get_editor_panel_categories(),
-			'default_route' => $default_route,
+			'default_route' => 'panel/elements/categories',
 			'has_elements' => static::get_property( 'has_elements' ),
 			'support_kit' => static::get_property( 'support_kit' ),
 			'messages' => [
@@ -268,9 +255,7 @@ abstract class Document extends Controls_Stack {
 			$attributes['class'] .= ' elementor-bc-flex-widget';
 		}
 
-		if ( Plugin::$instance->preview->is_preview() ) {
-			$attributes['data-elementor-title'] = static::get_title();
-		} else {
+		if ( ! Plugin::$instance->preview->is_preview_mode( $id ) ) {
 			$attributes['data-elementor-settings'] = wp_json_encode( $this->get_frontend_settings() );
 		}
 
@@ -283,15 +268,9 @@ abstract class Document extends Controls_Stack {
 	 */
 	public function get_wp_preview_url() {
 		$main_post_id = $this->get_main_id();
-		$document = $this;
-
-		// Ajax request from editor.
-		if ( ! empty( $_POST['initial_document_id'] ) ) {
-			$document = Plugin::$instance->documents->get( $_POST['initial_document_id'] );
-		}
 
 		$url = get_preview_post_link(
-			$document->get_main_id(),
+			$main_post_id,
 			[
 				'preview_id' => $main_post_id,
 				'preview_nonce' => wp_create_nonce( 'post_preview_' . $main_post_id ),
@@ -482,7 +461,6 @@ abstract class Document extends Controls_Stack {
 				'preview' => $this->get_preview_url(),
 				'wp_preview' => $this->get_wp_preview_url(),
 				'permalink' => $this->get_permalink(),
-				'have_a_look' => $this->get_have_a_look_url(),
 			],
 		];
 
@@ -527,13 +505,9 @@ abstract class Document extends Controls_Stack {
 	 * @return bool
 	 */
 	public function save( $data ) {
-		$this->add_handle_revisions_changed_filter();
-
 		if ( ! $this->is_editable_by_current_user() ) {
 			return false;
 		}
-
-		$this->set_is_saving( true );
 
 		/**
 		 * Before document save.
@@ -590,30 +564,7 @@ abstract class Document extends Controls_Stack {
 		 */
 		do_action( 'elementor/document/after_save', $this, $data );
 
-		$this->set_is_saving( false );
-
-		$this->remove_handle_revisions_changed_filter();
-
 		return true;
-	}
-
-	/**
-	 * @param array $new_settings
-	 *
-	 * @return static
-	 */
-	public function update_settings( array $new_settings ) {
-		$document_settings = $this->get_meta( PageManager::META_KEY );
-
-		if ( ! $document_settings ) {
-			$document_settings = [];
-		}
-
-		$this->save_settings(
-			array_replace_recursive( $document_settings, $new_settings )
-		);
-
-		return $this;
 	}
 
 	/**
@@ -859,20 +810,13 @@ abstract class Document extends Controls_Stack {
 		if ( ! $elements_data ) {
 			$elements_data = $this->get_elements_data();
 		}
-
-		$is_legacy_mode_active = Plugin::instance()->get_legacy_mode( 'elementWrappers' );
-
 		?>
 		<div <?php echo Utils::render_html_attributes( $this->get_container_attributes() ); ?>>
-			<?php if ( $is_legacy_mode_active ) { ?>
 			<div class="elementor-inner">
-			<?php } ?>
 				<div class="elementor-section-wrap">
 					<?php $this->print_elements( $elements_data ); ?>
 				</div>
-			<?php if ( $is_legacy_mode_active ) { ?>
 			</div>
-			<?php } ?>
 		</div>
 		<?php
 	}
@@ -1022,6 +966,17 @@ abstract class Document extends Controls_Stack {
 	}
 
 	/**
+	 * @since 2.0.0
+	 * @access public
+	 * @deprecated 2.2.0 Use `Document::save_template_type()`.
+	 */
+	public function save_type() {
+		_deprecated_function( __METHOD__, '2.2.0', __CLASS__ . '::save_template_type()' );
+
+		$this->save_template_type();
+	}
+
+	/**
 	 * @since 2.3.0
 	 * @access public
 	 */
@@ -1141,25 +1096,6 @@ abstract class Document extends Controls_Stack {
 		return $last_edited;
 	}
 
-
-	/**
-	 * @return bool
-	 */
-	public function is_saving() {
-		return $this->is_saving;
-	}
-
-	/**
-	 * @param $is_saving
-	 *
-	 * @return $this
-	 */
-	public function set_is_saving( $is_saving ) {
-		$this->is_saving = $is_saving;
-
-		return $this;
-	}
-
 	/**
 	 * @since 2.0.0
 	 * @access public
@@ -1199,7 +1135,6 @@ abstract class Document extends Controls_Stack {
 	protected function get_remote_library_config() {
 		$config = [
 			'type' => 'block',
-			'default_route' => 'templates/blocks',
 			'category' => $this->get_name(),
 			'autoImportSettings' => false,
 		];
@@ -1283,34 +1218,5 @@ abstract class Document extends Controls_Stack {
 
 	protected function get_post_statuses() {
 		return get_post_statuses();
-	}
-
-	protected function get_have_a_look_url() {
-		return $this->get_permalink();
-	}
-
-	public function handle_revisions_changed( $post_has_changed, $last_revision, $post ) {
-		// In case default, didn't determine the changes.
-		if ( ! $post_has_changed ) {
-			$last_revision_id = $last_revision->ID;
-			$last_revision_document = Plugin::instance()->documents->get( $last_revision_id );
-			$post_document = Plugin::instance()->documents->get( $post->ID );
-
-			$last_revision_settings = $last_revision_document->get_settings();
-			$post_settings = $post_document->get_settings();
-
-			// TODO: Its better to add crc32 signature for each revision and then only compare one part of the checksum.
-			$post_has_changed = $last_revision_settings !== $post_settings;
-		}
-
-		return $post_has_changed;
-	}
-
-	private function add_handle_revisions_changed_filter() {
-		add_filter( 'wp_save_post_revision_post_has_changed', [ $this, 'handle_revisions_changed' ], 10, 3 );
-	}
-
-	private function remove_handle_revisions_changed_filter() {
-		remove_filter( 'wp_save_post_revision_post_has_changed', [ $this, 'handle_revisions_changed' ] );
 	}
 }

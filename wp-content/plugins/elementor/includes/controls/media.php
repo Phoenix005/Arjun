@@ -130,21 +130,14 @@ class Control_Media extends Control_Base_Multiple {
 		?>
 		<div class="elementor-control-field elementor-control-media">
 			<label class="elementor-control-title">{{{ data.label }}}</label>
-			<# if ( 'image' === data.media_type || 'video' === data.media_type ) {
-			var inputWrapperClasses = 'elementor-control-input-wrapper elementor-aspect-ratio-219';
-
-			if ( ! data.label_block ) {
-				inputWrapperClasses += ' elementor-control-unit-5';
-			}
-			#>
-			<div class="{{{ inputWrapperClasses }}}">
+			<div class="elementor-control-input-wrapper elementor-aspect-ratio-219">
 				<div class="elementor-control-media__content elementor-control-tag-area elementor-control-preview-area elementor-fit-aspect-ratio">
-					<div class="elementor-control-media-upload-button elementor-control-media__content__upload-button elementor-fit-aspect-ratio">
+					<div class="elementor-control-media-upload-button elementor-fit-aspect-ratio">
 						<i class="eicon-plus-circle" aria-hidden="true"></i>
 					</div>
 					<div class="elementor-control-media-area elementor-fit-aspect-ratio">
-						<div class="elementor-control-media__remove elementor-control-media__content__remove" title="<?php echo __( 'Remove', 'elementor' ); ?>">
-							<i class="eicon-trash-o"></i>
+						<div class="elementor-control-media__remove" title="<?php echo __( 'Remove', 'elementor' ); ?>">
+							<i class="eicon-trash"></i>
 						</div>
 						<# if( 'image' === data.media_type ) { #>
 						<div class="elementor-control-media__preview elementor-fit-aspect-ratio"></div>
@@ -155,37 +148,13 @@ class Control_Media extends Control_Base_Multiple {
 					</div>
 					<div class="elementor-control-media__tools elementor-control-dynamic-switcher-wrapper">
 						<# if( 'image' === data.media_type ) { #>
-							<div class="elementor-control-media__tool elementor-control-media__replace" data-media-type="image"><?php echo __( 'Choose Image', 'elementor' ); ?></div>
-							<# if ( data.should_include_svg_inline_option) { #>
-								<div class="elementor-control-media__tool elementor-control-media__replace" data-media-type="svg"><?php echo __( 'Choose Svg', 'elementor' ); ?></div>
-							<# } #>
+						<div class="elementor-control-media__tool elementor-control-media__replace"><?php echo __( 'Choose Image', 'elementor' ); ?></div>
 						<# } else if( 'video' === data.media_type ) { #>
-						<div class="elementor-control-media__tool elementor-control-media__replace" data-media-type="video"><?php echo __( 'Choose Video', 'elementor' ); ?></div>
+						<div class="elementor-control-media__tool elementor-control-media__replace"><?php echo __( 'Choose Video', 'elementor' ); ?></div>
 						<# } #>
 					</div>
 				</div>
 			</div>
-			<# } else { #>
-			<div class="elementor-control-media__file elementor-control-preview-area">
-				<div class="elementor-control-media__file__content">
-					<div class="elementor-control-media__file__content__label"><?php echo __( 'Click the media icon to upload file', 'elementor' ); ?></div>
-					<div class="elementor-control-media__file__content__info">
-						<div class="elementor-control-media__file__content__info__icon">
-							<i class="eicon-document-file"></i>
-						</div>
-						<div class="elementor-control-media__file__content__info__name"></div>
-					</div>
-				</div>
-				<div class="elementor-control-media__file__controls">
-					<div class="elementor-control-media__remove elementor-control-media__file__controls__remove" title="<?php echo __( 'Remove', 'elementor' ); ?>">
-						<i class="eicon-trash-o"></i>
-					</div>
-					<div class="elementor-control-media__file__controls__upload-button elementor-control-media-upload-button" title="<?php echo __( 'Upload', 'elementor' ); ?>">
-						<i class="eicon-upload"></i>
-					</div>
-				</div>
-			</div>
-			<# } #>
 			<# if ( data.description ) { #>
 			<div class="elementor-control-field-description">{{{ data.description }}}</div>
 			<# } #>
@@ -209,7 +178,6 @@ class Control_Media extends Control_Base_Multiple {
 		return [
 			'label_block' => true,
 			'media_type' => 'image',
-			'should_include_svg_inline_option' => false,
 			'dynamic' => [
 				'categories' => [ TagsModule::IMAGE_CATEGORY ],
 				'returnType' => 'object',

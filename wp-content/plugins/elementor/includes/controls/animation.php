@@ -41,6 +41,8 @@ class Control_Animation extends Base_Data_Control {
 	 * @return array Control default settings.
 	 */
 	protected function get_default_settings() {
+		$default_settings = parent::get_default_settings();
+
 		$default_settings['label_block'] = true;
 		$default_settings['render_type'] = 'none';
 

@@ -38,7 +38,7 @@ class Db extends Base {
 		return $log;
 	}
 
-	public function get_log() {
+	protected function get_log() {
 		// Clear cache.
 		wp_cache_delete( self::LOG_NAME, 'options' );
 

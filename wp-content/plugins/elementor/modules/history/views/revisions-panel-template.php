@@ -44,12 +44,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 	<div class="elementor-revision-item__wrapper {{ type }}">
 		<div class="elementor-revision-item__gravatar">{{{ gravatar }}}</div>
 		<div class="elementor-revision-item__details">
-			<div class="elementor-revision-date" title="{{{ new Date( timestamp * 1000 ) }}}">{{{ date }}}</div>
-			<div class="elementor-revision-meta">
-				<span>{{{ elementor.translate( type ) }}}</span>
-				<?php echo __( 'By', 'elementor' ); ?> {{{ author }}}
-				<span>(#{{{ id }}})</span>&nbsp;
-			</div>
+			<div class="elementor-revision-date">{{{ date }}}</div>
+			<div class="elementor-revision-meta"><span>{{{ elementor.translate( type ) }}}</span> <?php echo __( 'By', 'elementor' ); ?> {{{ author }}}</div>
 		</div>
 		<div class="elementor-revision-item__tools">
 			<# if ( 'current' === type ) { #>

@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @since 1.0.0
  * @abstract
  */
-abstract class Skin_Base extends Sub_Controls_Stack {
+abstract class Skin_Base {
 
 	/**
 	 * Parent widget.
@@ -41,10 +41,32 @@ abstract class Skin_Base extends Sub_Controls_Stack {
 	 * @param Widget_Base $parent
 	 */
 	public function __construct( Widget_Base $parent ) {
-		parent::__construct( $parent );
+		$this->parent = $parent;
 
 		$this->_register_controls_actions();
 	}
+
+	/**
+	 * Get skin ID.
+	 *
+	 * Retrieve the skin ID.
+	 *
+	 * @since 1.0.0
+	 * @access public
+	 * @abstract
+	 */
+	abstract public function get_id();
+
+	/**
+	 * Get skin title.
+	 *
+	 * Retrieve the skin title.
+	 *
+	 * @since 1.0.0
+	 * @access public
+	 * @abstract
+	 */
+	abstract public function get_title();
 
 	/**
 	 * Render skin.
@@ -58,25 +80,16 @@ abstract class Skin_Base extends Sub_Controls_Stack {
 	abstract public function render();
 
 	/**
-	 * Render element in static mode.
+	 * Render skin output in the editor.
 	 *
-	 * If not inherent will call the base render.
+	 * Written as a Backbone JavaScript template and used to generate the live preview.
+	 *
+	 * @since 1.0.0
+	 * @deprecated 1.7.6
+	 * @access public
 	 */
-	public function render_static() {
-		$this->render();
-	}
-
-	/**
-	 * Determine the render logic.
-	 */
-	public function render_by_mode() {
-		if ( Plugin::$instance->frontend->is_static_render_mode() ) {
-			$this->render_static();
-
-			return;
-		}
-
-		$this->render();
+	public function _content_template() {
+		_deprecated_function( __METHOD__, '1.7.6' );
 	}
 
 	/**
@@ -143,9 +156,21 @@ abstract class Skin_Base extends Sub_Controls_Stack {
 	 * @param string $id   Section ID.
 	 * @param array  $args Section arguments.
 	 */
-	public function start_controls_section( $id, $args = [] ) {
+	public function start_controls_section( $id, $args ) {
 		$args['condition']['_skin'] = $this->get_id();
-		parent::start_controls_section( $id, $args );
+		$this->parent->start_controls_section( $this->get_control_id( $id ), $args );
+	}
+
+	/**
+	 * End skin controls section.
+	 *
+	 * Used to close an existing open skin controls section.
+	 *
+	 * @since 1.3.0
+	 * @access public
+	 */
+	public function end_controls_section() {
+		$this->parent->end_controls_section();
 	}
 
 	/**
@@ -153,19 +178,17 @@ abstract class Skin_Base extends Sub_Controls_Stack {
 	 *
 	 * Register a single control to the allow the user to set/update skin data.
 	 *
-	 * @param string $id   Control ID.
-	 * @param array  $args Control arguments.
-	 * @param array  $options
-	 *
-	 * @return bool True if skin added, False otherwise.
-
-	 * @since 3.0.0 New `$options` parameter added.
+	 * @since 1.0.0
 	 * @access public
 	 *
+	 * @param string $id   Control ID.
+	 * @param array  $args Control arguments.
+	 *
+	 * @return bool True if skin added, False otherwise.
 	 */
-	public function add_control( $id, $args = [], $options = [] ) {
+	public function add_control( $id, $args ) {
 		$args['condition']['_skin'] = $this->get_id();
-		return parent::add_control( $id, $args, $options );
+		return $this->parent->add_control( $this->get_control_id( $id ), $args );
 	}
 
 	/**
@@ -184,7 +207,21 @@ abstract class Skin_Base extends Sub_Controls_Stack {
 	 */
 	public function update_control( $id, $args, array $options = [] ) {
 		$args['condition']['_skin'] = $this->get_id();
-		parent::update_control( $id, $args, $options );
+		$this->parent->update_control( $this->get_control_id( $id ), $args, $options );
+	}
+
+	/**
+	 * Remove skin control.
+	 *
+	 * Unregister an existing skin control.
+	 *
+	 * @since 1.3.0
+	 * @access public
+	 *
+	 * @param string $id Control ID.
+	 */
+	public function remove_control( $id ) {
+		$this->parent->remove_control( $this->get_control_id( $id ) );
 	}
 
 	/**
@@ -192,17 +229,44 @@ abstract class Skin_Base extends Sub_Controls_Stack {
 	 *
 	 * Register a set of controls to allow editing based on user screen size.
 	 *
-	 * @param string $id   Responsive control ID.
-	 * @param array  $args Responsive control arguments.
-	 * @param array  $options
-	 *
-	 * @since  1.0.5
+	 * @since 1.0.5
 	 * @access public
 	 *
+	 * @param string $id   Responsive control ID.
+	 * @param array  $args Responsive control arguments.
 	 */
-	public function add_responsive_control( $id, $args, $options = [] ) {
+	public function add_responsive_control( $id, $args ) {
 		$args['condition']['_skin'] = $this->get_id();
-		parent::add_responsive_control( $id, $args );
+		$this->parent->add_responsive_control( $this->get_control_id( $id ), $args );
+	}
+
+	/**
+	 * Update responsive skin control.
+	 *
+	 * Change the value of an existing responsive skin control.
+	 *
+	 * @since 1.3.5
+	 * @access public
+	 *
+	 * @param string $id   Responsive control ID.
+	 * @param array  $args Responsive control arguments.
+	 */
+	public function update_responsive_control( $id, $args ) {
+		$this->parent->update_responsive_control( $this->get_control_id( $id ), $args );
+	}
+
+	/**
+	 * Remove responsive skin control.
+	 *
+	 * Unregister an existing skin responsive control.
+	 *
+	 * @since 1.3.5
+	 * @access public
+	 *
+	 * @param string $id Responsive control ID.
+	 */
+	public function remove_responsive_control( $id ) {
+		$this->parent->remove_responsive_control( $this->get_control_id( $id ) );
 	}
 
 	/**
@@ -218,7 +282,19 @@ abstract class Skin_Base extends Sub_Controls_Stack {
 	 */
 	public function start_controls_tab( $id, $args ) {
 		$args['condition']['_skin'] = $this->get_id();
-		parent::start_controls_tab( $id, $args );
+		$this->parent->start_controls_tab( $this->get_control_id( $id ), $args );
+	}
+
+	/**
+	 * End skin controls tab.
+	 *
+	 * Used to close an existing open controls tab.
+	 *
+	 * @since 1.5.0
+	 * @access public
+	 */
+	public function end_controls_tab() {
+		$this->parent->end_controls_tab();
 	}
 
 	/**
@@ -233,7 +309,19 @@ abstract class Skin_Base extends Sub_Controls_Stack {
 	 */
 	public function start_controls_tabs( $id ) {
 		$args['condition']['_skin'] = $this->get_id();
-		parent::start_controls_tabs( $id );
+		$this->parent->start_controls_tabs( $this->get_control_id( $id ) );
+	}
+
+	/**
+	 * End skin controls tabs.
+	 *
+	 * Used to close an existing open controls tabs.
+	 *
+	 * @since 1.5.0
+	 * @access public
+	 */
+	public function end_controls_tabs() {
+		$this->parent->end_controls_tabs();
 	}
 
 	/**
@@ -242,17 +330,16 @@ abstract class Skin_Base extends Sub_Controls_Stack {
 	 * Register a set of related controls grouped together as a single unified
 	 * control.
 	 *
-	 * @param string $group_name Group control name.
-	 * @param array  $args       Group control arguments. Default is an empty array.
-	 * @param array  $options
-	 *
-	 * @since  1.0.0
+	 * @since 1.0.0
 	 * @access public
 	 *
+	 * @param string $group_name Group control name.
+	 * @param array  $args       Group control arguments. Default is an empty array.
 	 */
-	final public function add_group_control( $group_name, $args = [], $options = [] ) {
+	final public function add_group_control( $group_name, $args = [] ) {
+		$args['name'] = $this->get_control_id( $args['name'] );
 		$args['condition']['_skin'] = $this->get_id();
-		parent::add_group_control( $group_name, $args );
+		$this->parent->add_group_control( $group_name, $args );
 	}
 
 	/**
